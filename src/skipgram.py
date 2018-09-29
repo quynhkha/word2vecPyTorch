@@ -24,7 +24,7 @@ class sgns(nn.Module):
             negsamples = torch.LongTensor(negsamples, device).view(-1, num_negsample)
         return targets, contexts, negsamples
 
-    def forward_sg(self, targets, contexts, negsamples, device, num_negsample=3):
+    def forward(self, targets, contexts, negsamples, device, num_negsample=3):
         targets, contexts, negsamples = self._get_variables_for_embedding_lookup(targets, contexts, negsamples,
                                                                                  num_negsample, device)
         target_embeds = self.target_emb(targets)  # B x 1 x D
