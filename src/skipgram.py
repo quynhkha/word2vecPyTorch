@@ -15,9 +15,13 @@ class sgns(nn.Module):
 
     def _get_tensor_for_embedding_lookup(self, targets, contexts, negsamples, num_negsample, device):
 
-        targets = torch.tensor(targets,dtype=torch.long,device=device).view(-1, 1)
-        contexts = torch.tensor(contexts,dtype=torch.long,device=device).view(-1, 1)
-        negsamples = torch.tensor(negsamples,dtype=torch.long,device=device).view(-1, num_negsample)
+        # targets = torch.tensor(targets,dtype=torch.long,device=device).view(-1, 1)
+        # contexts = torch.tensor(contexts,dtype=torch.long,device=device).view(-1, 1)
+        # negsamples = torch.tensor(negsamples,dtype=torch.long,device=device).view(-1, num_negsample)
+
+        targets = torch.cuda.LongTensor(targets).view(-1, 1)
+        contexts = torch.cuda.LongTensor(contexts).view(-1, 1)
+        negsamples = torch.cuda.LongTensor(negsamples).view(-1, num_negsample)
         return targets, contexts, negsamples
 
     def forward(self, targets, contexts, negsamples, device, num_negsample=3):

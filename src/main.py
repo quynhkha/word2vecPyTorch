@@ -10,8 +10,8 @@ from gutenberg_corpus_parser import *
 
 def main():
     n_epochs = 10
-    embedding_size = 128
-    num_negsamples = 5
+    embedding_size = 64
+    num_negsamples = 3
     win_size = 5
     lr = 0.001
     batch_size = 10240
@@ -46,7 +46,7 @@ def main():
             file_tc_pairs = get_target_context_pairs_sg(fname,token_to_id_map, max_win_size=win_size)
             tcn_tuples = utils.get_tcn_tuples_sg(file_tc_pairs, unigram_table, num_negsamples=num_negsamples)
 
-            # file_tc_pairs = utils.get_target_context_pairs_cbow(fname, token_to_id_map, win_size=win_size)
+            # file_tc_pairs = get_target_context_pairs_cbow(fname, token_to_id_map, win_size=win_size)
             # tcn_tuples = utils.get_tcn_tuples_cbow(file_tc_pairs, unigram_table, num_negsamples=num_negsamples)
 
 

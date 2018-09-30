@@ -51,7 +51,7 @@ def get_target_context_pairs_sg(fileid, word_to_id_map, max_win_size=3):
     return tgt_cont_pairs
 
 def get_filenames_ids():
-    fileids = gutenberg.fileids()[:10]
+    fileids = gutenberg.fileids()[:]
     return fileids
 
 def main():
