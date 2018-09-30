@@ -1,6 +1,6 @@
 from collections import defaultdict,Counter
 from nltk.tokenize import RegexpTokenizer
-import numpy as np, glob
+import numpy as np, glob, random
 
 def get_filenames_ids():
     dataset_folder = '../data/sentiment_labelled_sentences'
@@ -38,7 +38,7 @@ def get_word_freq_map(files):
     return word_freq_map
 
 
-def get_target_context_pairs_sg(fname, word_to_id_map, win_size=3):
+def get_target_context_pairs_sg(fname, word_to_id_map, max_win_size=3):
     tgt_cont_pairs = []
     lines = open(fname).readlines()
     for l in lines:
@@ -46,6 +46,7 @@ def get_target_context_pairs_sg(fname, word_to_id_map, win_size=3):
         tokenizer = RegexpTokenizer(r'\w+')
         tokens = tokenizer.tokenize(l)
         for i, w in enumerate(tokens):
+            win_size = random.randint(1,max_win_size) #favour closer words
             target = [word_to_id_map[w]]*win_size*2
             context_words = tokens[min(0,i-win_size):i] + tokens[i+1:min(i+win_size+1, len(tokens))]
             context = [word_to_id_map[c] for c in context_words]

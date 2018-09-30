@@ -9,12 +9,12 @@ from gutenberg_corpus_parser import *
 
 
 def main():
-    n_epochs = 80
-    embedding_size = 32
+    n_epochs = 10
+    embedding_size = 128
     num_negsamples = 5
     win_size = 5
-    lr = 0.01
-    batch_size = 1024
+    lr = 0.001
+    batch_size = 10240
 
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -43,7 +43,7 @@ def main():
         for fname in files:
             # print ('training ', fname)
             optimizer.zero_grad()
-            file_tc_pairs = get_target_context_pairs_sg(fname,token_to_id_map, win_size=win_size)
+            file_tc_pairs = get_target_context_pairs_sg(fname,token_to_id_map, max_win_size=win_size)
             tcn_tuples = utils.get_tcn_tuples_sg(file_tc_pairs, unigram_table, num_negsamples=num_negsamples)
 
             # file_tc_pairs = utils.get_target_context_pairs_cbow(fname, token_to_id_map, win_size=win_size)
@@ -52,16 +52,19 @@ def main():
 
             random.shuffle(tcn_tuples)
 
-            for batch_tcn in utils.get_batch(tcn_tuples, batch_size):
+            for batch_num, batch_tcn in enumerate(utils.get_batch(tcn_tuples, batch_size)):
 
                 t, c, n = zip(*batch_tcn)
 
                 loss = model.forward(t, c, n, device=device, num_negsample=num_negsamples)
 
-                losses.append(loss.data[0])
+                losses.append(loss.data[0][0])
                 loss.backward()
 
                 optimizer.step()
+
+                if (batch_num+1) %5 == 0:
+                    print (f"epoch: {e}, batch: {batch_num+1}, loss: {loss.data[0][0]}")
 
         epoch_loss = sum(losses)/len(losses)
         epoch_time = time() - t0
@@ -69,7 +72,7 @@ def main():
 
         if e%2 == 0:
             target_word_embeddings = model.get_embeddings()
-            np.savetxt('word_embeddings_{}.txt'.format(e),target_word_embeddings, fmt='%.8f')
+            np.savetxt('word_embeddings_{}.txt'.format(e),target_word_embeddings)
 
 
     print ('end')
