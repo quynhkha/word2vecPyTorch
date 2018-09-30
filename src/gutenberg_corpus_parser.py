@@ -2,6 +2,7 @@ import nltk, re
 from nltk.corpus import gutenberg
 from collections import defaultdict,Counter
 import utils
+import random
 
 
 def get_sent_tokens(fileid):
@@ -36,11 +37,12 @@ def get_word_freq_map (fileids):
     return word_freq_map
 
 
-def get_target_context_pairs_sg(fileid, word_to_id_map, win_size=3):
+def get_target_context_pairs_sg(fileid, word_to_id_map, max_win_size=3):
     tgt_cont_pairs = []
     for tokens in get_sent_tokens(fileid):
         tokens = list(tokens)
         for i, w in enumerate(tokens):
+            win_size = random.randint(1, max_win_size)  # favour closer words
             target = [word_to_id_map[w]]*win_size*2
             context_words = tokens[min(0,i-win_size):i] + tokens[i+1:min(i+win_size+1, len(tokens))]
             context = [word_to_id_map[c] for c in context_words]
