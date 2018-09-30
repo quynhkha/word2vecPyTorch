@@ -4,16 +4,16 @@ import skipgram, cbow
 import numpy as np
 from time import time
 import utils
-from gutenberg_corpus_parser import *
-# from sentiment_corpus_parser import *
+# from gutenberg_corpus_parser import *
+from sentiment_corpus_parser import *
 
 
 def main():
-    n_epochs = 10
-    embedding_size = 64
-    num_negsamples = 3
-    win_size = 5
-    lr = 0.001
+    n_epochs = 50
+    embedding_size = 96
+    num_negsamples = 10
+    win_size = 7
+    lr = 0.005
     batch_size = 10240
 
     if torch.cuda.is_available():

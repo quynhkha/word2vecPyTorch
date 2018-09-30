@@ -18,7 +18,7 @@ def get_unigram_table(word_freq_map, token_to_id_map):
 
     for w, f in word_to_negsample_freq.items():
         unigram_table.extend([token_to_id_map[w]] * (int(f) + 1))
-    unigram_table = np.array(unigram_table, dtype=np.int16)
+    unigram_table = np.array(unigram_table, dtype=np.int64)
     return unigram_table
 
 
