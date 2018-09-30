@@ -13,19 +13,15 @@ class sgns(nn.Module):
         self.target_emb.weight.data.uniform_(-init_range, init_range)
         self.context_emb.weight.data.zero_()
 
-    def _get_variables_for_embedding_lookup(self, targets, contexts, negsamples, num_negsample, device):
-        if 'cuda' == device.type:
-            targets = torch.cuda.LongTensor(targets, device).view(-1, 1)
-            contexts = torch.cuda.LongTensor(contexts, device).view(-1, 1)
-            negsamples = torch.cuda.LongTensor(negsamples, device).view(-1, num_negsample)
-        else:
-            targets = torch.LongTensor(targets, device).view(-1, 1)
-            contexts = torch.LongTensor(contexts, device).view(-1, 1)
-            negsamples = torch.LongTensor(negsamples, device).view(-1, num_negsample)
+    def _get_tensor_for_embedding_lookup(self, targets, contexts, negsamples, num_negsample, device):
+
+        targets = torch.tensor(targets,dtype=torch.long,device=device).view(-1, 1)
+        contexts = torch.tensor(contexts,dtype=torch.long,device=device).view(-1, 1)
+        negsamples = torch.tensor(negsamples,dtype=torch.long,device=device).view(-1, num_negsample)
         return targets, contexts, negsamples
 
     def forward(self, targets, contexts, negsamples, device, num_negsample=3):
-        targets, contexts, negsamples = self._get_variables_for_embedding_lookup(targets, contexts, negsamples,
+        targets, contexts, negsamples = self._get_tensor_for_embedding_lookup(targets, contexts, negsamples,
                                                                                  num_negsample, device)
         target_embeds = self.target_emb(targets)  # B x 1 x D
         context_embeds = self.context_emb(contexts)  # B x 1 x D
