@@ -4,8 +4,8 @@ import skipgram, cbow
 import numpy as np
 from time import time
 import utils
-# from gutenberg_corpus_parser import *
-from sentiment_corpus_parser import *
+from gutenberg_corpus_parser import *
+# from sentiment_corpus_parser import *
 
 
 def main():
@@ -14,6 +14,7 @@ def main():
     num_negsamples = 5
     win_size = 5
     lr = 0.01
+    batch_size = 1024
 
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -25,6 +26,7 @@ def main():
     word_freq_map = get_word_freq_map(files)
     unigram_table = utils.get_unigram_table(word_freq_map, token_to_id_map)
 
+    utils.dump_vocab(id_to_token_map)
 
     model = skipgram.sgns(num_words=len(vocab), embedding_dim=embedding_size)
     # model = cbow.cbowns(num_words=len(vocab), embedding_dim=embedding_size)
@@ -50,14 +52,16 @@ def main():
 
             random.shuffle(tcn_tuples)
 
-            t, c, n = zip(*tcn_tuples)
+            for batch_tcn in utils.get_batch(tcn_tuples, batch_size):
 
-            loss = model.forward(t, c, n, device=device, num_negsample=num_negsamples)
+                t, c, n = zip(*batch_tcn)
 
-            losses.append(loss.data[0])
-            loss.backward()
+                loss = model.forward(t, c, n, device=device, num_negsample=num_negsamples)
 
-            optimizer.step()
+                losses.append(loss.data[0])
+                loss.backward()
+
+                optimizer.step()
 
         epoch_loss = sum(losses)/len(losses)
         epoch_time = time() - t0
@@ -65,11 +69,6 @@ def main():
 
         if e%2 == 0:
             target_word_embeddings = model.get_embeddings()
-            with open('vocab.txt','w') as fh:
-                max_id = max(id_to_token_map)
-                for w_id in range(max_id+1):
-                    print(id_to_token_map[w_id], file=fh)
-
             np.savetxt('word_embeddings_{}.txt'.format(e),target_word_embeddings, fmt='%.8f')
 
 

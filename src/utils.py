@@ -37,6 +37,17 @@ def get_tcn_tuples_sg(file_tc_pairs, unigram_table, num_negsamples):
     return tcn_pairs
 
 
+def get_batch(tcn_tuples, batch_size):
+    for batch_start_index in range(0, len(tcn_tuples), batch_size):
+        yield tcn_tuples[batch_start_index:batch_start_index + batch_size]
+
+
+def dump_vocab(id_to_token_map):
+    with open('vocab.txt', 'w') as fh:
+        max_id = max(id_to_token_map)
+        for w_id in range(max_id + 1):
+            print(id_to_token_map[w_id], file=fh)
+
 
 
 if __name__ == '__main__':
