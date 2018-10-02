@@ -27,9 +27,13 @@ def main():
     vocab = get_vocab(files)
     n_words = len(vocab)
     doc_start_neuron_id = n_words
+    split = True
 
     token_to_id_map, id_to_token_map = utils.get_token_id_maps(vocab)
-    doc_to_id_map, id_to_doc_map = utils.get_doc_id_maps(doc_start_neuron_id, files)
+    if split:
+        doc_to_id_map, id_to_doc_map = utils.get_doc_id_maps_split(files)
+    else:
+        doc_to_id_map, id_to_doc_map = utils.get_doc_id_maps(doc_start_neuron_id, files)
     word_freq_map = get_word_freq_map(files)
     unigram_table = utils.get_unigram_table(word_freq_map, token_to_id_map)
 
@@ -37,7 +41,7 @@ def main():
     utils.dump_doc_names(id_to_doc_map)
 
 
-    model = skipgram.sgns(num_words=n_words, num_docs = n_docs, embedding_dim=embedding_size)
+    model = skipgram.sgns(num_words=n_words, num_docs = n_docs, embedding_dim=embedding_size, split=split)
     if 'cuda' == device.type: model = model.cuda()
     print (f' the model being initialized is: {model}')
 
@@ -48,27 +52,59 @@ def main():
         t0 = time()
         random.shuffle(files)
         losses = []
+        losses_word = []
+        losses_doc = []
         for fname in files:
             # print ('training ', fname)
             word_tc_pairs, doc_tc_pairs = get_target_context_pairs_sg(fname, token_to_id_map, doc_to_id_map, max_win_size=win_size)
             word_tcn_tuples = utils.get_tcn_tuples_sg(word_tc_pairs, unigram_table, num_negsamples=num_negsamples)
             doc_tcn_tuples = utils.get_tcn_tuples_sg(doc_tc_pairs, unigram_table, num_negsamples=num_negsamples)
-            tcn_tuples = word_tcn_tuples + doc_tcn_tuples
-            random.shuffle(tcn_tuples)
-            for batch_num, batch_tcn in enumerate(utils.get_batch(tcn_tuples, batch_size)):
-                t, c, n = zip(*batch_tcn)
-                loss = model.forward(t, c, n, device=device, num_negsample=num_negsamples)
-                losses.append(loss.data[0][0])
-                loss.backward()
-                optimizer.step()
-                optimizer.zero_grad()
+            if split:
+                for batch_num, batch_tcn in enumerate(utils.get_batch(word_tcn_tuples, batch_size)):
+                    t, c, n = zip(*batch_tcn)
+                    loss = model.forward(t, c, n, device=device, num_negsample=num_negsamples)
+                    losses_word.append(loss.data[0][0])
+                    loss.backward()
+                    optimizer.step()
+                    optimizer.zero_grad()
 
-                if (batch_num+1) %5 == 0:
-                    print (f"epoch: {e}, file: {fname}, batch: {batch_num+1}, loss: {loss.data[0][0]}")
+                    if (batch_num + 1) % 5 == 0:
+                        print(f"epoch: {e}, file: {fname}, batch: {batch_num+1}, loss: {loss.data[0][0]}")
+                for batch_num, batch_tcn in enumerate(utils.get_batch(doc_tcn_tuples, batch_size)):
+                    t, c, n = zip(*batch_tcn)
+                    loss = model.forward(t, c, n, device=device, num_negsample=num_negsamples)
+                    losses_doc.append(loss.data[0][0])
+                    loss.backward()
+                    optimizer.step()
+                    optimizer.zero_grad()
 
-        epoch_loss = sum(losses)/len(losses)
-        epoch_time = time() - t0
-        print(f'loss : {epoch_loss}, epoch: {e}, time: {round(epoch_time, 4)} sec')
+                    if (batch_num + 1) % 5 == 0:
+                        print(f"epoch: {e}, file: {fname}, batch: {batch_num+1}, loss: {loss.data[0][0]}")
+            else:
+                tcn_tuples = word_tcn_tuples + doc_tcn_tuples
+                random.shuffle(tcn_tuples)
+                for batch_num, batch_tcn in enumerate(utils.get_batch(tcn_tuples, batch_size)):
+                    t, c, n = zip(*batch_tcn)
+                    loss = model.forward(t, c, n, device=device, num_negsample=num_negsamples)
+                    losses.append(loss.data[0][0])
+                    loss.backward()
+                    optimizer.step()
+                    optimizer.zero_grad()
+
+                    if (batch_num+1) %5 == 0:
+                        print (f"epoch: {e}, file: {fname}, batch: {batch_num+1}, loss: {loss.data[0][0]}")
+        if split:
+            epoch_loss_word = sum(losses_word) / len(losses_word)
+            epoch_time = time() - t0
+            print(f'loss : {epoch_loss_word}, epoch: {e}, time: {round(epoch_time, 4)} sec')
+            epoch_loss_doc = sum(losses_doc) / len(losses_doc)
+            epoch_time = time() - t0
+            print(f'loss : {epoch_loss_doc}, epoch: {e}, time: {round(epoch_time, 4)} sec')
+
+        else:
+            epoch_loss = sum(losses)/len(losses)
+            epoch_time = time() - t0
+            print(f'loss : {epoch_loss}, epoch: {e}, time: {round(epoch_time, 4)} sec')
 
         if e%2 == 0:
             word_embeddings = model.get_embeddings(type='word')

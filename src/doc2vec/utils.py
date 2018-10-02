@@ -17,6 +17,11 @@ def get_doc_id_maps(doc_start_neuron_id, doc_fnames):
     id_to_doc_map = {i: w for w, i in doc_to_id_map.items()}
     return doc_to_id_map, id_to_doc_map
 
+def get_doc_id_maps_split(doc_fnames):
+    doc_fnames = sorted(doc_fnames)
+    doc_to_id_map = {w: i for i, w in enumerate(doc_fnames)}
+    id_to_doc_map = {i: w for w, i in doc_to_id_map.items()}
+    return doc_to_id_map, id_to_doc_map
 
 
 def get_token_id_maps(vocab):

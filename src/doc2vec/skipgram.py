@@ -5,13 +5,17 @@ import numpy as np
 
 class sgns(nn.Module):
 
-    def __init__(self, num_words, num_docs, embedding_dim):
+    def __init__(self, num_words, num_docs, embedding_dim, split):
         super(sgns,self).__init__()
         self.embedding_size = embedding_dim
         self.num_words = num_words
         self.num_docs = num_docs
-
-        self.in_emb = nn.Embedding(num_words+num_docs, embedding_dim) # hidden layer embeddings
+        self.split = split
+        if self.split:
+            self.word_emb = nn.Embedding(num_words, embedding_dim)  # hidden layer embeddings
+            self.doc_emb = nn.Embedding(num_docs, embedding_dim)  # hidden layer embeddings
+        else:
+            self.in_emb = nn.Embedding(num_words + num_docs, embedding_dim)  # hidden layer embeddings
         self.out_emb = nn.Embedding(num_words, embedding_dim) # output layer embeddings
 
         init_range = 0.005
@@ -43,11 +47,20 @@ class sgns(nn.Module):
         return loss
 
     def get_embeddings(self, type):
-        in_emb = self.in_emb.weight.data.cpu().numpy()
-        if type == 'word':
-            return in_emb[:self.num_words, :]
-        elif type == 'doc':
-            return in_emb[self.num_words:, :]
+        if self.split:
+            if type == 'word':
+                return self.word_emb.weight.data.cpu().numpy()
+            elif type == 'doc':
+                return self.doc_emb.weight.data.cpu().numpy()
+            else:
+                print('invalid get emb type')
+                return None
         else:
-            print ('invalid get emb type')
-            return None
+            in_emb = self.in_emb.weight.data.cpu().numpy()
+            if type == 'word':
+                return in_emb[:self.num_words, :]
+            elif type == 'doc':
+                return in_emb[self.num_words:, :]
+            else:
+                print ('invalid get emb type')
+                return None
