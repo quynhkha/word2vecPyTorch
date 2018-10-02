@@ -69,7 +69,7 @@ def main():
                     optimizer.zero_grad()
 
                     if (batch_num + 1) % 5 == 0:
-                        print(f"epoch: {e}, file: {fname}, batch: {batch_num+1}, loss: {loss.data[0][0]}")
+                        print(f"epoch: {e}, file: {fname}, batch: {batch_num+1}, loss of word: {loss.data[0][0]}")
                 for batch_num, batch_tcn in enumerate(utils.get_batch(doc_tcn_tuples, batch_size)):
                     t, c, n = zip(*batch_tcn)
                     loss = model.forward(t, c, n, device=device, num_negsample=num_negsamples)
@@ -79,7 +79,7 @@ def main():
                     optimizer.zero_grad()
 
                     if (batch_num + 1) % 5 == 0:
-                        print(f"epoch: {e}, file: {fname}, batch: {batch_num+1}, loss: {loss.data[0][0]}")
+                        print(f"epoch: {e}, file: {fname}, batch: {batch_num+1}, loss of doc: {loss.data[0][0]}")
             else:
                 tcn_tuples = word_tcn_tuples + doc_tcn_tuples
                 random.shuffle(tcn_tuples)
